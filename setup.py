@@ -32,7 +32,7 @@ setup(
         "CairoSVG",
         'Pillow',
         'jsonschema',
-        'ipython',
+        'nbformat',
         'click',
         'hurry.filesize'
     ],
