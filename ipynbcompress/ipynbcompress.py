@@ -1,9 +1,11 @@
 # coding: utf-8
+import PIL
 from base64 import b64decode, b64encode
+from cairosvg import svg2png
 from PIL import Image
 from io import BytesIO
 from os import stat
-from IPython.nbformat import read, write
+from nbformat import read, write
 
 
 def compress(filename, output_filename=None, img_width=2048, img_format='png'):
@@ -44,16 +46,24 @@ def compress(filename, output_filename=None, img_width=2048, img_format='png'):
         for key in keys:
             if 'image' in key:
                 string = ''.join(data[key])
-                bytes_img = b64decode(string)
-                io_img = BytesIO(bytes_img)
-                img = Image.open(io_img)
-                factor = float(img_width) / img.size[0]
-                if factor < 1:
-                    # only resize large images
-                    new_size = [int(s*factor+0.5) for s in img.size]
-                    img = img.resize(new_size)
                 out = BytesIO()
-                img.save(out, img_format)
+
+                if 'svg' in key:
+                    print(f"converting {key} to image/png")
+                    svg2png(bytestring=string, write_to=out, output_width=img_width)
+                else:
+                    bytes_img = b64decode(string)
+                    io_img = BytesIO(bytes_img)
+                    img = Image.open(io_img)
+
+                    factor = float(img_width) / img.size[0]
+                    if factor < 1:
+                        # only resize large images
+                        new_size = [int(s*factor+0.5) for s in img.size]
+                        img = img.resize(new_size)
+
+                    img.save(out, img_format)
+
                 out.seek(0)
                 mime = 'image/' + img_format
                 del data[key]
